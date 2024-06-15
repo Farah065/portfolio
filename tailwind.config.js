@@ -7,10 +7,21 @@ module.exports = {
   ],
   theme: {
     extend: {
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+      colors: {
+        beige: {
+          200: "#F8F5EA",
+          300: "#EEECDE",
+          400: "#DBD5BC",
+          500: "#C4BC9B",
+        },
+        coal: {
+          200: "#555555",
+          300: "#333333",
+          400: "#111111",
+        }
+      },
+      fontFamily: {
+        plexMono: ['IBM Plex Mono', 'monospace'],
       },
     },
   },
