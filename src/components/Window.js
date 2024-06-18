@@ -13,12 +13,14 @@ function Window() {
         width: 700,
         height: 500
     };
+    const minSize = {
+        width: 200,
+        height: 150
+    };
     const [isResizing, setIsResizing] = useState(false); // state to determine if the window is being resized
     const [size, setSize] = useState(defaultSize); // state to store the current size of the window
     const [initialSize, setInitialSize] = useState(defaultSize); // state to store the size of the window when resizing started
     const [resizeDirection, setResizeDirection] = useState(''); // state to store the direction of the resize
-    const minWidth = 200;
-    const minHeight = 150;
 
     const [initialMouseOffset, setInitialMouseOffset] = useState({ x: 0, y: 0 }); // state to store the initial mouse position when dragging or resizing started
 
@@ -48,32 +50,32 @@ function Window() {
                 const deltaX = event.clientX - initialMouseOffset.x;
                 const deltaY = event.clientY - initialMouseOffset.y;
 
-                // Calculate new dimensions and positions
+                // calculate new dimensions and positions
                 const resizeCalculations = {
                     'right': () => ({
-                        newWidth: Math.max(initialSize.width + deltaX, minWidth), // add the distance moved to the initial width
+                        newWidth: Math.max(initialSize.width + deltaX, minSize.width), // add the distance moved to the initial width
                         newHeight: initialSize.height,
                         newX: initialPosition.x,
                         newY: initialPosition.y
                     }),
                     'bottom': () => ({
                         newWidth: initialSize.width,
-                        newHeight: Math.max(initialSize.height + deltaY, minHeight), // make sure the new height is not less than the minimum height
+                        newHeight: Math.max(initialSize.height + deltaY, minSize.height), // make sure the new height is not less than the minimum height
                         newX: initialPosition.x,
                         newY: initialPosition.y
                     }),
                     'bottom-right': () => ({
-                        newWidth: Math.max(initialSize.width + deltaX, minWidth),
-                        newHeight: Math.max(initialSize.height + deltaY, minHeight),
+                        newWidth: Math.max(initialSize.width + deltaX, minSize.width),
+                        newHeight: Math.max(initialSize.height + deltaY, minSize.height),
                         newX: initialPosition.x,
                         newY: initialPosition.y
                     }),
                     'left': () => {
-                        const newWidth = Math.max(initialSize.width - deltaX, minWidth); // subtracting because width should decrease when x increases
+                        const newWidth = Math.max(initialSize.width - deltaX, minSize.width); // subtracting because width should decrease when x increases
                         // update position to give the effect of resizing from the left
                         // if new width is greater than the minimum width, displace the window by the distance moved
                         // else, displace the window by the maximum amount possible (difference between initial width and minimum width)
-                        const newX = newWidth > minWidth ? initialPosition.x + deltaX : initialPosition.x + initialSize.width - minWidth;
+                        const newX = newWidth > minSize.width ? initialPosition.x + deltaX : initialPosition.x + initialSize.width - minSize.width;
                         return {
                             newWidth,
                             newHeight: initialSize.height,
@@ -82,8 +84,8 @@ function Window() {
                         };
                     },
                     'top': () => {
-                        const newHeight = Math.max(initialSize.height - deltaY, minHeight);
-                        const newY = newHeight > minHeight ? initialPosition.y + deltaY : initialPosition.y + initialSize.height - minHeight;
+                        const newHeight = Math.max(initialSize.height - deltaY, minSize.height);
+                        const newY = newHeight > minSize.height ? initialPosition.y + deltaY : initialPosition.y + initialSize.height - minSize.height;
                         return {
                             newWidth: initialSize.width,
                             newHeight,
@@ -92,30 +94,30 @@ function Window() {
                         };
                     },
                     'top-right': () => {
-                        const newHeight = Math.max(initialSize.height - deltaY, minHeight);
-                        const newY = newHeight > minHeight ? initialPosition.y + deltaY : initialPosition.y + initialSize.height - minHeight;
+                        const newHeight = Math.max(initialSize.height - deltaY, minSize.height);
+                        const newY = newHeight > minSize.height ? initialPosition.y + deltaY : initialPosition.y + initialSize.height - minSize.height;
                         return {
-                            newWidth: Math.max(initialSize.width + deltaX, minWidth),
+                            newWidth: Math.max(initialSize.width + deltaX, minSize.width),
                             newHeight,
                             newX: initialPosition.x,
                             newY
                         };
                     },
                     'bottom-left': () => {
-                        const newWidth = Math.max(initialSize.width - deltaX, minWidth);
-                        const newX = newWidth > minWidth ? initialPosition.x + deltaX : initialPosition.x + initialSize.width - minWidth;
+                        const newWidth = Math.max(initialSize.width - deltaX, minSize.width);
+                        const newX = newWidth > minSize.width ? initialPosition.x + deltaX : initialPosition.x + initialSize.width - minSize.width;
                         return {
                             newWidth,
-                            newHeight: Math.max(initialSize.height + deltaY, minHeight),
+                            newHeight: Math.max(initialSize.height + deltaY, minSize.height),
                             newX,
                             newY: initialPosition.y
                         };
                     },
                     'top-left': () => {
-                        const newWidth = Math.max(initialSize.width - deltaX, minWidth);
-                        const newX = newWidth > minWidth ? initialPosition.x + deltaX : initialPosition.x + initialSize.width - minWidth;
-                        const newHeight = Math.max(initialSize.height - deltaY, minHeight);
-                        const newY = newHeight > minHeight ? initialPosition.y + deltaY : initialPosition.y + initialSize.height - minHeight;
+                        const newWidth = Math.max(initialSize.width - deltaX, minSize.width);
+                        const newX = newWidth > minSize.width ? initialPosition.x + deltaX : initialPosition.x + initialSize.width - minSize.width;
+                        const newHeight = Math.max(initialSize.height - deltaY, minSize.height);
+                        const newY = newHeight > minSize.height ? initialPosition.y + deltaY : initialPosition.y + initialSize.height - minSize.height;
                         return {
                             newWidth,
                             newHeight,
@@ -129,10 +131,44 @@ function Window() {
                 // square brackets are used to access a specific object property using the resizeDirection state
                 // parentheses are used to call the function returned by the object property
                 const { newWidth, newHeight, newX, newY } = resizeCalculations[resizeDirection]();
+                
+                // ensure window doesn't go out of bounds while resizing
+                let constrainedX = (resizeDirection === "left" || resizeDirection === "top-left" || resizeDirection === "bottom-left") ?
+                                      Math.min(newX, window.innerWidth - 50) // minimum x position is window width - 50
+                                      : (resizeDirection === "right" || resizeDirection === "top-right" || resizeDirection === "bottom-right") ?
+                                        Math.max(newX, 50 - newWidth) // maximum x position is 50 - new width so 50 pixels of the window are always visible
+                                        : newX; // for top and bottom resize, x position remains the same
+
+                const constrainedY = (resizeDirection === "top" || resizeDirection === "top-left" || resizeDirection === "top-right") ?
+                                      (event.clientY - initialMouseOffset.y > 0 ?
+                                       Math.min(newY, window.innerHeight - 100) // if the mouse is moving down while resizing from the top, maximum y position should keep 100 pixels of the window visible
+                                       : Math.max(newY, -20)) // if it's moving up, minimum y position should only cut off 20 pixels to keep the title bar visible
+                                      : newY; // for bottom, left, and right resize, y position remains the same
+                
+                // stop resizing if the window hits the border
+                const constrainedHeight = resizeDirection === "top" || resizeDirection === "top-left" || resizeDirection === "top-right" ?
+                                          (constrainedY === -20 ?
+                                           initialSize.height + initialPosition.y + 20 // if at the top border, the maximum height is the initial height plus the distance from the top border
+                                           : constrainedY === window.innerHeight - 100 ?
+                                             initialSize.height - (window.innerHeight - 100 - initialPosition.y) // if at the bottom border, the minimum height is the initial height minus the distance from 100 pixels from the bottom of the screen
+                                             : newHeight) // if not at the border, the height stays the same
+                                          : newHeight; // if resizing from the bottom, left, or right, the height stays the same
+
+                const constrainedWidth = (resizeDirection === "left" || resizeDirection === "top-left" || resizeDirection === "bottom-left") && constrainedX === window.innerWidth - 50 ?
+                                          initialSize.width - (window.innerWidth - 50 - initialPosition.x) // if at the right border, the minimum width is the initial width minus the distance from 50 pixels from the right of the screen
+                                          : (resizeDirection === "right" || resizeDirection === "top-right" || resizeDirection === "bottom-right") && constrainedX === 50 - newWidth ?
+                                            initialSize.width - (initialPosition.x + initialSize.width - 50) // if at the left border, the minimum width is the initial width minus the distance between the right edge and 50 pixels from the left of the screen
+                                            : newWidth;
+                
+                // if resizing stopped as a result of being at the left border, prevent changing the position (Math.max(newX, 50 - newWidth) found in constrainedX calculation above)
+                // the reason the position continues changing in the first place is because the value is updated before the position is constrained, using newWidth (which is still updating)
+                if (constrainedX === 50 - newWidth && constrainedWidth === initialSize.width - (initialPosition.x + initialSize.width - 50)) {
+                    constrainedX = initialPosition.x;
+                }
 
                 // update the position and size
-                setPosition({ x: newX, y: newY });
-                setSize({ width: newWidth, height: newHeight });
+                setPosition({ x: constrainedX, y: constrainedY });
+                setSize({ width: constrainedWidth, height: constrainedHeight });
             }
         };
 
@@ -192,37 +228,37 @@ function Window() {
             {/* Resize handles */}
             <div
                 className="absolute -left-1 top-0 h-full w-1 cursor-ew-resize"
-                onMouseDown={(e) => handleResizeMouseDown(e, 'left')}
+                onMouseDown={(e) => handleResizeMouseDown(e, "left")}
             />
             <div
                 className="absolute -right-1 top-0 h-full w-1 cursor-ew-resize"
-                onMouseDown={(e) => handleResizeMouseDown(e, 'right')}
+                onMouseDown={(e) => handleResizeMouseDown(e, "right")}
             />
             <div
                 className="absolute left-0 -top-1 w-full h-1 cursor-ns-resize"
-                onMouseDown={(e) => handleResizeMouseDown(e, 'top')}
+                onMouseDown={(e) => handleResizeMouseDown(e, "top")}
             />
             <div
                 className="absolute left-0 -bottom-1 w-full h-1 cursor-ns-resize"
-                onMouseDown={(e) => handleResizeMouseDown(e, 'bottom')}
+                onMouseDown={(e) => handleResizeMouseDown(e, "bottom")}
             />
 
             {/* Corner handles */}
             <div
                 className="absolute -left-1 -top-1 w-2 h-2 cursor-nwse-resize"
-                onMouseDown={(e) => handleResizeMouseDown(e, 'top-left')}
+                onMouseDown={(e) => handleResizeMouseDown(e, "top-left")}
             />
             <div
                 className="absolute -right-1 -top-1 w-2 h-2 cursor-nesw-resize"
-                onMouseDown={(e) => handleResizeMouseDown(e, 'top-right')}
+                onMouseDown={(e) => handleResizeMouseDown(e, "top-right")}
             />
             <div
                 className="absolute -left-1 -bottom-1 w-2 h-2 cursor-nesw-resize"
-                onMouseDown={(e) => handleResizeMouseDown(e, 'bottom-left')}
+                onMouseDown={(e) => handleResizeMouseDown(e, "bottom-left")}
             />
             <div
                 className="absolute -right-1 -bottom-1 w-2 h-2 cursor-nwse-resize"
-                onMouseDown={(e) => handleResizeMouseDown(e, 'bottom-right')}
+                onMouseDown={(e) => handleResizeMouseDown(e, "bottom-right")}
             />
         </div>
     );
