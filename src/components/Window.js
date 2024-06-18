@@ -5,8 +5,8 @@ import React, { useState, useEffect } from 'react';
 function Window() {
     // variables for window dragging
     const [isDragging, setIsDragging] = useState(false); // state to determine if the window is being dragged
-    const [position, setPosition] = useState({x:0, y:0}); // state to store the current position of the window
-    const [initialPosition, setInitialPosition] = useState({x:0, y:0}); // state to store the position of the window when dragging started
+    const [position, setPosition] = useState({ x: 0, y: 0 }); // state to store the current position of the window
+    const [initialPosition, setInitialPosition] = useState({ x: 0, y: 0 }); // state to store the position of the window when dragging started
 
     // variables for window resizing
     const defaultSize = {
@@ -17,9 +17,11 @@ function Window() {
     const [size, setSize] = useState(defaultSize); // state to store the current size of the window
     const [initialSize, setInitialSize] = useState(defaultSize); // state to store the size of the window when resizing started
     const [resizeDirection, setResizeDirection] = useState(''); // state to store the direction of the resize
+    const minWidth = 200;
+    const minHeight = 150;
 
     const [initialMouseOffset, setInitialMouseOffset] = useState({ x: 0, y: 0 }); // state to store the initial mouse position when dragging or resizing started
-    
+
     useEffect(() => {
         // Update the position to center the window after the component mounts
         const defaultPos = {
@@ -34,11 +36,15 @@ function Window() {
             if (isDragging) {
                 const deltaX = event.clientX - initialMouseOffset.x; // event.clientX is the current mouse x position
                 const deltaY = event.clientY - initialMouseOffset.y; // subtracting initial position from current position gives the distance moved by the mouse
-                setPosition({ x: initialPosition.x + deltaX, y: initialPosition.y + deltaY }); // add the distance moved to the initial window position
-            } else if (isResizing) {
-                const minWidth = 200;
-                const minHeight = 150;
 
+                let newX = initialPosition.x + deltaX; // add the distance moved to the initial window position
+                let newY = initialPosition.y + deltaY;
+
+                newX = Math.max(-size.width + 50, Math.min(newX, window.innerWidth - 50)); // make sure the window does not go too far outside the viewport
+                newY = Math.max(-20, Math.min(newY, window.innerHeight - 100)); 
+
+                setPosition({ x: newX, y: newY });
+            } else if (isResizing) {
                 const deltaX = event.clientX - initialMouseOffset.x;
                 const deltaY = event.clientY - initialMouseOffset.y;
 
@@ -182,7 +188,7 @@ function Window() {
             >
                 <h1 className="font-medium ml-2">File Manager</h1>
             </div>
-            
+
             {/* Resize handles */}
             <div
                 className="absolute -left-1 top-0 h-full w-1 cursor-ew-resize"
