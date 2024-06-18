@@ -3,18 +3,22 @@
 import React, { useState, useEffect } from 'react';
 
 function Window() {
-    const [isDragging, setIsDragging] = useState(false);
-    const [position, setPosition] = useState({x:0, y:0});
-    const [initialPosition, setInitialPosition] = useState({x:0, y:0});
+    // variables for window dragging
+    const [isDragging, setIsDragging] = useState(false); // state to determine if the window is being dragged
+    const [position, setPosition] = useState({x:0, y:0}); // state to store the current position of the window
+    const [initialPosition, setInitialPosition] = useState({x:0, y:0}); // state to store the position of the window when dragging started
 
+    // variables for window resizing
     const defaultSize = {
         width: 700,
         height: 500
     };
-    const [isResizing, setIsResizing] = useState(false);
-    const [size, setSize] = useState(defaultSize);
-    const [initialSize, setInitialSize] = useState(defaultSize);
-    const [resizeDirection, setResizeDirection] = useState('');
+    const [isResizing, setIsResizing] = useState(false); // state to determine if the window is being resized
+    const [size, setSize] = useState(defaultSize); // state to store the current size of the window
+    const [initialSize, setInitialSize] = useState(defaultSize); // state to store the size of the window when resizing started
+    const [resizeDirection, setResizeDirection] = useState(''); // state to store the direction of the resize
+
+    const [initialMouseOffset, setInitialMouseOffset] = useState({ x: 0, y: 0 }); // state to store the initial mouse position when dragging or resizing started
     
     useEffect(() => {
         // Update the position to center the window after the component mounts
@@ -23,87 +27,142 @@ function Window() {
             y: window.innerHeight / 2 - 270
         };
         setPosition(defaultPos);
-        setInitialPosition(defaultPos);
     }, []);
 
     useEffect(() => {
         const handleMouseMove = (event) => {
             if (isDragging) {
-                const deltaX = event.clientX - initialPosition.x;
-                const deltaY = event.clientY - initialPosition.y;
-                setPosition({ x: deltaX, y: deltaY });
+                const deltaX = event.clientX - initialMouseOffset.x; // event.clientX is the current mouse x position
+                const deltaY = event.clientY - initialMouseOffset.y; // subtracting initial position from current position gives the distance moved by the mouse
+                setPosition({ x: initialPosition.x + deltaX, y: initialPosition.y + deltaY }); // add the distance moved to the initial window position
             } else if (isResizing) {
-                const resizeHandlers = {
-                    'right': () => {
-                        const newWidth = Math.max(initialSize.width + (event.clientX - initialPosition.x), 200);
-                        setSize({ ...size, width: newWidth });
-                    },
-                    'bottom': () => {
-                        const newHeight = Math.max(initialSize.height + (event.clientY - initialPosition.y), 150);
-                        setSize({ ...size, height: newHeight });
-                    },
-                    'bottom-right': () => {
-                        const newWidth = Math.max(initialSize.width + (event.clientX - initialPosition.x), 200);
-                        const newHeight = Math.max(initialSize.height + (event.clientY - initialPosition.y), 150);
-                        setSize({ width: newWidth, height: newHeight });
-                    },
+                const minWidth = 200;
+                const minHeight = 150;
+
+                const deltaX = event.clientX - initialMouseOffset.x;
+                const deltaY = event.clientY - initialMouseOffset.y;
+
+                // Calculate new dimensions and positions
+                const resizeCalculations = {
+                    'right': () => ({
+                        newWidth: Math.max(initialSize.width + deltaX, minWidth), // add the distance moved to the initial width
+                        newHeight: initialSize.height,
+                        newX: initialPosition.x,
+                        newY: initialPosition.y
+                    }),
+                    'bottom': () => ({
+                        newWidth: initialSize.width,
+                        newHeight: Math.max(initialSize.height + deltaY, minHeight), // make sure the new height is not less than the minimum height
+                        newX: initialPosition.x,
+                        newY: initialPosition.y
+                    }),
+                    'bottom-right': () => ({
+                        newWidth: Math.max(initialSize.width + deltaX, minWidth),
+                        newHeight: Math.max(initialSize.height + deltaY, minHeight),
+                        newX: initialPosition.x,
+                        newY: initialPosition.y
+                    }),
                     'left': () => {
-                        const newWidth = Math.max(initialSize.width - (event.clientX - initialPosition.x), 200);
-                        setPosition({ ...position, x: initialPosition.x + (event.clientX - initialPosition.x)});
-                        setSize({ ...size, width: newWidth });
+                        const newWidth = Math.max(initialSize.width - deltaX, minWidth); // subtracting because width should decrease when x increases
+                        // update position to give the effect of resizing from the left
+                        // if new width is greater than the minimum width, displace the window by the distance moved
+                        // else, displace the window by the maximum amount possible (difference between initial width and minimum width)
+                        const newX = newWidth > minWidth ? initialPosition.x + deltaX : initialPosition.x + initialSize.width - minWidth;
+                        return {
+                            newWidth,
+                            newHeight: initialSize.height,
+                            newX,
+                            newY: initialPosition.y
+                        };
                     },
                     'top': () => {
-                        const newHeight = Math.max(initialSize.height - (event.clientY - initialPosition.y), 150);
-                        setPosition({ ...position, y: initialPosition.y + (event.clientY - initialPosition.y) });
-                        setSize({ ...size, height: newHeight });
+                        const newHeight = Math.max(initialSize.height - deltaY, minHeight);
+                        const newY = newHeight > minHeight ? initialPosition.y + deltaY : initialPosition.y + initialSize.height - minHeight;
+                        return {
+                            newWidth: initialSize.width,
+                            newHeight,
+                            newX: initialPosition.x,
+                            newY
+                        };
                     },
                     'top-right': () => {
-                        const newWidth = Math.max(initialSize.width + (event.clientX - initialPosition.x), 200);
-                        const newHeight = Math.max(initialSize.height - (event.clientY - initialPosition.y), 150);
-                        setPosition({ ...position, y: initialPosition.y + (event.clientY - initialPosition.y) });
-                        setSize({ width: newWidth, height: newHeight });
+                        const newHeight = Math.max(initialSize.height - deltaY, minHeight);
+                        const newY = newHeight > minHeight ? initialPosition.y + deltaY : initialPosition.y + initialSize.height - minHeight;
+                        return {
+                            newWidth: Math.max(initialSize.width + deltaX, minWidth),
+                            newHeight,
+                            newX: initialPosition.x,
+                            newY
+                        };
                     },
                     'bottom-left': () => {
-                        const newWidth = Math.max(initialSize.width - (event.clientX - initialPosition.x), 200);
-                        const newHeight = Math.max(initialSize.height + (event.clientY - initialPosition.y), 150);
-                        setPosition({ ...position, x: initialPosition.x + (event.clientX - initialPosition.x) });
-                        setSize({ width: newWidth, height: newHeight });
+                        const newWidth = Math.max(initialSize.width - deltaX, minWidth);
+                        const newX = newWidth > minWidth ? initialPosition.x + deltaX : initialPosition.x + initialSize.width - minWidth;
+                        return {
+                            newWidth,
+                            newHeight: Math.max(initialSize.height + deltaY, minHeight),
+                            newX,
+                            newY: initialPosition.y
+                        };
                     },
                     'top-left': () => {
-                        const newWidth = Math.max(initialSize.width - (event.clientX - initialPosition.x), 200);
-                        const newHeight = Math.max(initialSize.height - (event.clientY - initialPosition.y), 150);
-                        setPosition({ ...position, x: initialPosition.x + (event.clientX - initialPosition.x), y: initialPosition.y + (event.clientY - initialPosition.y) });
-                        setSize({ width: newWidth, height: newHeight });
+                        const newWidth = Math.max(initialSize.width - deltaX, minWidth);
+                        const newX = newWidth > minWidth ? initialPosition.x + deltaX : initialPosition.x + initialSize.width - minWidth;
+                        const newHeight = Math.max(initialSize.height - deltaY, minHeight);
+                        const newY = newHeight > minHeight ? initialPosition.y + deltaY : initialPosition.y + initialSize.height - minHeight;
+                        return {
+                            newWidth,
+                            newHeight,
+                            newX,
+                            newY
+                        };
                     }
                 };
-                resizeHandlers[resizeDirection]();
+
+                // resizeCalculations is defined as an object with keys as the resize direction
+                // square brackets are used to access a specific object property using the resizeDirection state
+                // parentheses are used to call the function returned by the object property
+                const { newWidth, newHeight, newX, newY } = resizeCalculations[resizeDirection]();
+
+                // update the position and size
+                setPosition({ x: newX, y: newY });
+                setSize({ width: newWidth, height: newHeight });
             }
         };
 
+        // stop dragging or resizing when the mouse button is released
         const handleMouseUp = () => {
             setIsDragging(false);
             setIsResizing(false);
         };
 
+        // add event listeners for mousemove and mouseup events
+        // mousedown is added to the window divs themselves (onMouseDown attribute)
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
 
+        // cleanup function to remove event listeners when the component unmounts
         return () => {
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
         };
-    }, [isDragging, isResizing, initialPosition, initialSize, resizeDirection, size, position]);
+    }, [isDragging, isResizing, initialMouseOffset, initialPosition, initialSize, resizeDirection]);
 
+
+    // function to handle the mousedown event on the window
     const handleMouseDown = (event) => {
         setIsDragging(true);
-        setInitialPosition({ x: event.clientX - position.x, y: event.clientY - position.y });
+        setInitialMouseOffset({ x: event.clientX, y: event.clientY });
+        setInitialPosition({ x: position.x, y: position.y });
     };
 
+    // function to handle the mousedown event on the resize handles
     const handleResizeMouseDown = (event, direction) => {
         setIsResizing(true);
-        setInitialPosition({ x: event.clientX, y: event.clientY });
+        setResizeDirection(direction); // direction depends on the resize handle clicked
+        setInitialMouseOffset({ x: event.clientX, y: event.clientY });
+        setInitialPosition({ x: position.x, y: position.y });
         setInitialSize({ width: size.width, height: size.height });
-        setResizeDirection(direction);
         event.stopPropagation();
     };
 
