@@ -228,6 +228,7 @@ function Window(props) {
                 height: `${size.height}px`,
                 zIndex: props.windows.indexOf(props.id) + 1
             }}
+            onClick={() => focusWindow()}
         >
             <div
                 className="h-8 bg-beige-400 flex items-center border-b border-coal-400"
