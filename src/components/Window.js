@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 
-function Window() {
+function Window(props) {
     // variables for window dragging
     const [isDragging, setIsDragging] = useState(false); // state to determine if the window is being dragged
-    const [position, setPosition] = useState({ x: 0, y: 0 }); // state to store the current position of the window
+    const [position, setPosition] = useState({ x: -700, y: -500 }); // state to store the current position of the window
     const [initialPosition, setInitialPosition] = useState({ x: 0, y: 0 }); // state to store the position of the window when dragging started
 
     // variables for window resizing
@@ -43,7 +43,7 @@ function Window() {
                 let newY = initialPosition.y + deltaY;
 
                 newX = Math.max(-size.width + 50, Math.min(newX, window.innerWidth - 50)); // make sure the window does not go too far outside the viewport
-                newY = Math.max(-20, Math.min(newY, window.innerHeight - 100)); 
+                newY = Math.max(-20, Math.min(newY, window.innerHeight - 100));
 
                 setPosition({ x: newX, y: newY });
             } else if (isResizing) {
@@ -131,35 +131,35 @@ function Window() {
                 // square brackets are used to access a specific object property using the resizeDirection state
                 // parentheses are used to call the function returned by the object property
                 const { newWidth, newHeight, newX, newY } = resizeCalculations[resizeDirection]();
-                
+
                 // ensure window doesn't go out of bounds while resizing
                 let constrainedX = (resizeDirection === "left" || resizeDirection === "top-left" || resizeDirection === "bottom-left") ?
-                                      Math.min(newX, window.innerWidth - 50) // minimum x position is window width - 50
-                                      : (resizeDirection === "right" || resizeDirection === "top-right" || resizeDirection === "bottom-right") ?
-                                        Math.max(newX, 50 - newWidth) // maximum x position is 50 - new width so 50 pixels of the window are always visible
-                                        : newX; // for top and bottom resize, x position remains the same
+                    Math.min(newX, window.innerWidth - 50) // minimum x position is window width - 50
+                    : (resizeDirection === "right" || resizeDirection === "top-right" || resizeDirection === "bottom-right") ?
+                        Math.max(newX, 50 - newWidth) // maximum x position is 50 - new width so 50 pixels of the window are always visible
+                        : newX; // for top and bottom resize, x position remains the same
 
                 const constrainedY = (resizeDirection === "top" || resizeDirection === "top-left" || resizeDirection === "top-right") ?
-                                      (event.clientY - initialMouseOffset.y > 0 ?
-                                       Math.min(newY, window.innerHeight - 100) // if the mouse is moving down while resizing from the top, maximum y position should keep 100 pixels of the window visible
-                                       : Math.max(newY, -20)) // if it's moving up, minimum y position should only cut off 20 pixels to keep the title bar visible
-                                      : newY; // for bottom, left, and right resize, y position remains the same
-                
+                    (event.clientY - initialMouseOffset.y > 0 ?
+                        Math.min(newY, window.innerHeight - 100) // if the mouse is moving down while resizing from the top, maximum y position should keep 100 pixels of the window visible
+                        : Math.max(newY, -20)) // if it's moving up, minimum y position should only cut off 20 pixels to keep the title bar visible
+                    : newY; // for bottom, left, and right resize, y position remains the same
+
                 // stop resizing if the window hits the border
                 const constrainedHeight = resizeDirection === "top" || resizeDirection === "top-left" || resizeDirection === "top-right" ?
-                                          (constrainedY === -20 ?
-                                           initialSize.height + initialPosition.y + 20 // if at the top border, the maximum height is the initial height plus the distance from the top border
-                                           : constrainedY === window.innerHeight - 100 ?
-                                             initialSize.height - (window.innerHeight - 100 - initialPosition.y) // if at the bottom border, the minimum height is the initial height minus the distance from 100 pixels from the bottom of the screen
-                                             : newHeight) // if not at the border, the height stays the same
-                                          : newHeight; // if resizing from the bottom, left, or right, the height stays the same
+                    (constrainedY === -20 ?
+                        initialSize.height + initialPosition.y + 20 // if at the top border, the maximum height is the initial height plus the distance from the top border
+                        : constrainedY === window.innerHeight - 100 ?
+                            initialSize.height - (window.innerHeight - 100 - initialPosition.y) // if at the bottom border, the minimum height is the initial height minus the distance from 100 pixels from the bottom of the screen
+                            : newHeight) // if not at the border, the height stays the same
+                    : newHeight; // if resizing from the bottom, left, or right, the height stays the same
 
                 const constrainedWidth = (resizeDirection === "left" || resizeDirection === "top-left" || resizeDirection === "bottom-left") && constrainedX === window.innerWidth - 50 ?
-                                          initialSize.width - (window.innerWidth - 50 - initialPosition.x) // if at the right border, the minimum width is the initial width minus the distance from 50 pixels from the right of the screen
-                                          : (resizeDirection === "right" || resizeDirection === "top-right" || resizeDirection === "bottom-right") && constrainedX === 50 - newWidth ?
-                                            initialSize.width - (initialPosition.x + initialSize.width - 50) // if at the left border, the minimum width is the initial width minus the distance between the right edge and 50 pixels from the left of the screen
-                                            : newWidth;
-                
+                    initialSize.width - (window.innerWidth - 50 - initialPosition.x) // if at the right border, the minimum width is the initial width minus the distance from 50 pixels from the right of the screen
+                    : (resizeDirection === "right" || resizeDirection === "top-right" || resizeDirection === "bottom-right") && constrainedX === 50 - newWidth ?
+                        initialSize.width - (initialPosition.x + initialSize.width - 50) // if at the left border, the minimum width is the initial width minus the distance between the right edge and 50 pixels from the left of the screen
+                        : newWidth;
+
                 // if resizing stopped as a result of being at the left border, prevent changing the position (Math.max(newX, 50 - newWidth) found in constrainedX calculation above)
                 // the reason the position continues changing in the first place is because the value is updated before the position is constrained, using newWidth (which is still updating)
                 if (constrainedX === 50 - newWidth && constrainedWidth === initialSize.width - (initialPosition.x + initialSize.width - 50)) {
@@ -190,9 +190,18 @@ function Window() {
         };
     }, [isDragging, isResizing, initialMouseOffset, initialPosition, initialSize, resizeDirection]);
 
+    function focusWindow() {
+        const index = props.windows.indexOf(props.id);
+        if (index !== -1) { // Check if the index is valid
+            let arr = [...props.windows]; // copy the array
+            arr.push(arr.splice(index, 1)[0]); // Remove the element at the found index and append it to the end
+            props.setWindows(arr); // update the state
+        }
+    }
 
     // function to handle the mousedown event on the window
     const handleMouseDown = (event) => {
+        focusWindow();
         setIsDragging(true);
         setInitialMouseOffset({ x: event.clientX, y: event.clientY });
         setInitialPosition({ x: position.x, y: position.y });
@@ -200,6 +209,7 @@ function Window() {
 
     // function to handle the mousedown event on the resize handles
     const handleResizeMouseDown = (event, direction) => {
+        focusWindow();
         setIsResizing(true);
         setResizeDirection(direction); // direction depends on the resize handle clicked
         setInitialMouseOffset({ x: event.clientX, y: event.clientY });
@@ -215,14 +225,18 @@ function Window() {
                 left: `${position.x}px`,
                 top: `${position.y}px`,
                 width: `${size.width}px`,
-                height: `${size.height}px`
+                height: `${size.height}px`,
+                zIndex: props.windows.indexOf(props.id) + 1
             }}
         >
             <div
-                className="h-8 bg-beige-500 flex items-center border-b border-coal-400"
+                className="h-8 bg-beige-400 flex items-center border-b border-coal-400"
                 onMouseDown={handleMouseDown}
             >
                 <h1 className="font-medium ml-2">File Manager</h1>
+            </div>
+            <div>
+                <p className="p-2">Window number {props.id}</p>
             </div>
 
             {/* Resize handles */}
