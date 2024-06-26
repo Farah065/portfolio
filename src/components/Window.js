@@ -191,11 +191,11 @@ function Window(props) {
     }, [isDragging, isResizing, initialMouseOffset, initialPosition, initialSize, resizeDirection]);
 
     function focusWindow() {
-        const index = props.windows.indexOf(props.id);
-        if (index !== -1) { // Check if the index is valid
-            let arr = [...props.windows]; // copy the array
-            arr.push(arr.splice(index, 1)[0]); // Remove the element at the found index and append it to the end
-            props.setWindows(arr); // update the state
+        const index = props.order.indexOf(props.id);
+        if (index !== -1) { // check if the index is valid
+            let arr = [...props.order]; // copy the array
+            arr.push(arr.splice(index, 1)[0]); // remove the element at the found index and append it to the end
+            props.setOrder(arr); // update the state
         }
     }
 
@@ -226,7 +226,7 @@ function Window(props) {
                 top: `${position.y}px`,
                 width: `${size.width}px`,
                 height: `${size.height}px`,
-                zIndex: props.windows.indexOf(props.id) + 1
+                zIndex: props.order.indexOf(props.id) + 1
             }}
             onClick={() => focusWindow()}
         >
