@@ -22,9 +22,12 @@ function Desktop() {
                     windows={windows} setWindows={setWindows}
                     order={order} setOrder={setOrder} />
             </div>
-            {windows.some(window => window.id === 1) && <Window id={1} order={order} setOrder={setOrder} />}
-            {windows.some(window => window.id === 2) && <Window id={2} order={order} setOrder={setOrder} />}
-            {windows.some(window => window.id === 3) && <Window id={3} order={order} setOrder={setOrder} />}
+            {windows.some(window => window.id === 1) && <Window id={1} order={order} setOrder={setOrder} 
+                                                            windows={windows} setWindows={setWindows} />}
+            {windows.some(window => window.id === 2) && <Window id={2} order={order} setOrder={setOrder} 
+                                                            windows={windows} setWindows={setWindows} />}
+            {windows.some(window => window.id === 3) && <Window id={3} order={order} setOrder={setOrder} 
+                                                            windows={windows} setWindows={setWindows} />}
             <Footer windows={windows} order={order} setOrder={setOrder} />
         </div>
     );

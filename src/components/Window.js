@@ -24,6 +24,10 @@ function Window(props) {
 
     const [initialMouseOffset, setInitialMouseOffset] = useState({ x: 0, y: 0 }); // state to store the initial mouse position when dragging or resizing started
 
+    const [isFullScreen, setFullScreen] = useState(false); // state to determine if the window is in full screen mode
+    const [prevSize, setPrevSize] = useState(defaultSize); // state to store the previous size of the window before full screen
+    const [prevPosition, setPrevPosition] = useState({ x: 0, y: 0 }); // state to store the previous position of the window before full screen
+
     useEffect(() => {
         // Update the position to center the window after the component mounts
         const defaultPos = {
@@ -199,12 +203,48 @@ function Window(props) {
         }
     }
 
+    function closeWindow() {
+        focusWindow();
+        let arr = [...props.order];
+        arr.splice(-1, 1);
+        props.setOrder(arr);
+        props.setWindows(props.windows.filter(window => window.id !== props.id));
+    }
+
+    function fullScreen() {
+        focusWindow();
+        if (isFullScreen) {
+            setSize(prevSize);
+            setPosition(prevPosition);
+        } else {
+            setPrevSize(size);
+            setPrevPosition(position);
+            setSize({ width: window.innerWidth, height: window.innerHeight - 46 });
+            setPosition({ x: 0, y: 0 });
+        }
+        setFullScreen(!isFullScreen);
+    }
+
     // function to handle the mousedown event on the window
     const handleMouseDown = (event) => {
         focusWindow();
+        setFullScreen(false);
+        setSize(prevSize);
         setIsDragging(true);
         setInitialMouseOffset({ x: event.clientX, y: event.clientY });
-        setInitialPosition({ x: position.x, y: position.y });
+        if (isFullScreen) {
+            const mouseX = event.clientX / window.innerWidth;
+            const sizeDiff = window.innerWidth - prevSize.width;
+            const pos = {
+                x: mouseX * sizeDiff,
+                y: position.y
+            }
+            setPosition(pos);
+            setInitialPosition(pos);
+        }
+        else {
+            setInitialPosition({ x: position.x, y: position.y });
+        }
     };
 
     // function to handle the mousedown event on the resize handles
@@ -220,7 +260,8 @@ function Window(props) {
 
     return (
         <div
-            className="bg-beige-300 absolute border-2 border-coal-400 no-select"
+            className={isDragging || isResizing ? "bg-beige-300 absolute border-2 border-coal-400 no-select"
+                : "bg-beige-300 absolute border-2 border-coal-400 no-select transition-all duration-300 ease-in-out"}
             style={{
                 left: `${position.x}px`,
                 top: `${position.y}px`,
@@ -230,51 +271,71 @@ function Window(props) {
             }}
             onClick={() => focusWindow()}
         >
-            <div
-                className="h-8 bg-beige-400 flex items-center border-b border-coal-400"
-                onMouseDown={handleMouseDown}
-            >
-                <h1 className="font-medium ml-2">File Manager</h1>
+            <div className="h-8 bg-beige-400 flex items-center border-b border-coal-400">
+                <div
+                    className="h-full w-full flex items-center"
+                    onMouseDown={handleMouseDown}
+                >
+                    <h1 className="font-medium ml-2">File Manager</h1>
+                </div>
+                <div className="h-full shrink-0">
+                    <button className="w-8 border-l-2 border-coal-400 h-full">
+                        -
+                    </button>
+                    <button
+                        className="w-8 border-l-2 border-coal-400 h-full"
+                        onClick={() => fullScreen()}
+                    >
+                        ◻
+                    </button>
+                    <button
+                        className="w-8 border-l-2 border-coal-400 h-full"
+                        onClick={() => closeWindow()}
+                    >
+                        X
+                    </button>
+                </div>
             </div>
             <div>
                 <p className="p-2">Window number {props.id}</p>
             </div>
 
             {/* Resize handles */}
-            <div
-                className="absolute -left-1 top-0 h-full w-1 cursor-ew-resize"
-                onMouseDown={(e) => handleResizeMouseDown(e, "left")}
-            />
-            <div
-                className="absolute -right-1 top-0 h-full w-1 cursor-ew-resize"
-                onMouseDown={(e) => handleResizeMouseDown(e, "right")}
-            />
-            <div
-                className="absolute left-0 -top-1 w-full h-1 cursor-ns-resize"
-                onMouseDown={(e) => handleResizeMouseDown(e, "top")}
-            />
-            <div
-                className="absolute left-0 -bottom-1 w-full h-1 cursor-ns-resize"
-                onMouseDown={(e) => handleResizeMouseDown(e, "bottom")}
-            />
+            {!isFullScreen && <>
+                <div
+                    className="absolute -left-1 top-0 h-full w-1 cursor-ew-resize"
+                    onMouseDown={(e) => handleResizeMouseDown(e, "left")}
+                />
+                <div
+                    className="absolute -right-1 top-0 h-full w-1 cursor-ew-resize"
+                    onMouseDown={(e) => handleResizeMouseDown(e, "right")}
+                />
+                <div
+                    className="absolute left-0 -top-1 w-full h-1 cursor-ns-resize"
+                    onMouseDown={(e) => handleResizeMouseDown(e, "top")}
+                />
+                <div
+                    className="absolute left-0 -bottom-1 w-full h-1 cursor-ns-resize"
+                    onMouseDown={(e) => handleResizeMouseDown(e, "bottom")}
+                />
 
-            {/* Corner handles */}
-            <div
-                className="absolute -left-1 -top-1 w-2 h-2 cursor-nwse-resize"
-                onMouseDown={(e) => handleResizeMouseDown(e, "top-left")}
-            />
-            <div
-                className="absolute -right-1 -top-1 w-2 h-2 cursor-nesw-resize"
-                onMouseDown={(e) => handleResizeMouseDown(e, "top-right")}
-            />
-            <div
-                className="absolute -left-1 -bottom-1 w-2 h-2 cursor-nesw-resize"
-                onMouseDown={(e) => handleResizeMouseDown(e, "bottom-left")}
-            />
-            <div
-                className="absolute -right-1 -bottom-1 w-2 h-2 cursor-nwse-resize"
-                onMouseDown={(e) => handleResizeMouseDown(e, "bottom-right")}
-            />
+                <div
+                    className="absolute -left-1 -top-1 w-2 h-2 cursor-nwse-resize"
+                    onMouseDown={(e) => handleResizeMouseDown(e, "top-left")}
+                />
+                <div
+                    className="absolute -right-1 -top-1 w-2 h-2 cursor-nesw-resize"
+                    onMouseDown={(e) => handleResizeMouseDown(e, "top-right")}
+                />
+                <div
+                    className="absolute -left-1 -bottom-1 w-2 h-2 cursor-nesw-resize"
+                    onMouseDown={(e) => handleResizeMouseDown(e, "bottom-left")}
+                />
+                <div
+                    className="absolute -right-1 -bottom-1 w-2 h-2 cursor-nwse-resize"
+                    onMouseDown={(e) => handleResizeMouseDown(e, "bottom-right")}
+                />
+            </>}
         </div>
     );
 }
