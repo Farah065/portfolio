@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Icon from "./Icon";
 import Window from "./Window";
 import Footer from "./Footer";
@@ -8,6 +8,30 @@ import Footer from "./Footer";
 function Desktop() {
     const [windows, setWindows] = useState([]);
     const [order, setOrder] = useState([]);
+
+    const [defaultPos, setDefaultPos] = useState({ x: 0, y: 0 });
+
+    useEffect(() => {
+        // calculate the default position of the windows
+        setDefaultPos({
+            x: window.innerWidth / 2 - 350,
+            y: window.innerHeight / 2 - 270
+        });
+
+        // recalculate the default position of the windows when the window is resized
+        const handleWindowResize = () => {
+            setDefaultPos({
+                x: window.innerWidth / 2 - 350,
+                y: window.innerHeight / 2 - 270
+            });
+        }
+
+        window.addEventListener('resize', handleWindowResize);
+
+        return () => {
+            window.removeEventListener('resize', handleWindowResize);
+        };
+    }, []);
 
     return (
         <div>
@@ -22,12 +46,15 @@ function Desktop() {
                     windows={windows} setWindows={setWindows}
                     order={order} setOrder={setOrder} />
             </div>
-            {windows.some(window => window.id === 1) && <Window id={1} order={order} setOrder={setOrder} 
-                                                            windows={windows} setWindows={setWindows} />}
-            {windows.some(window => window.id === 2) && <Window id={2} order={order} setOrder={setOrder} 
-                                                            windows={windows} setWindows={setWindows} />}
-            {windows.some(window => window.id === 3) && <Window id={3} order={order} setOrder={setOrder} 
-                                                            windows={windows} setWindows={setWindows} />}
+            {windows.some(window => window.id === 1) && <Window id={1} defaultPos={defaultPos}
+                order={order} setOrder={setOrder}
+                windows={windows} setWindows={setWindows} />}
+            {windows.some(window => window.id === 2) && <Window id={2} defaultPos={defaultPos}
+                order={order} setOrder={setOrder}
+                windows={windows} setWindows={setWindows} />}
+            {windows.some(window => window.id === 3) && <Window id={3} defaultPos={defaultPos}
+                order={order} setOrder={setOrder}
+                windows={windows} setWindows={setWindows} />}
             <Footer windows={windows} order={order} setOrder={setOrder} />
         </div>
     );

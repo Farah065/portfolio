@@ -18,9 +18,8 @@ function FooterIcons(props) {
                 <Image
                     priority
                     src={"/images/settings.svg"}
-                    className="w-10"
-                    height="0"
-                    width="0"
+                    height="40"
+                    width="40"
                     alt={"settings icon"}
                 />
             </button>

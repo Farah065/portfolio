@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 function Window(props) {
     // variables for window dragging
     const [isDragging, setIsDragging] = useState(false); // state to determine if the window is being dragged
-    const [position, setPosition] = useState({ x: -700, y: -500 }); // state to store the current position of the window
+    const [position, setPosition] = useState(props.defaultPos); // state to store the current position of the window
     const [initialPosition, setInitialPosition] = useState({ x: 0, y: 0 }); // state to store the position of the window when dragging started
 
     // variables for window resizing
@@ -28,14 +28,7 @@ function Window(props) {
     const [prevSize, setPrevSize] = useState(defaultSize); // state to store the previous size of the window before full screen
     const [prevPosition, setPrevPosition] = useState({ x: 0, y: 0 }); // state to store the previous position of the window before full screen
 
-    useEffect(() => {
-        // Update the position to center the window after the component mounts
-        const defaultPos = {
-            x: window.innerWidth / 2 - 350,
-            y: window.innerHeight / 2 - 270
-        };
-        setPosition(defaultPos);
-    }, []);
+    const [canClose, setCanClose] = useState(false); // state to determine if the window can be closed
 
     useEffect(() => {
         const handleMouseMove = (event) => {
@@ -46,7 +39,7 @@ function Window(props) {
                 let newX = initialPosition.x + deltaX; // add the distance moved to the initial window position
                 let newY = initialPosition.y + deltaY;
 
-                newX = Math.max(-size.width + 50, Math.min(newX, window.innerWidth - 50)); // make sure the window does not go too far outside the viewport
+                newX = Math.max(-size.width + 120, Math.min(newX, window.innerWidth - 50)); // make sure the window does not go too far outside the viewport
                 newY = Math.max(-20, Math.min(newY, window.innerHeight - 100));
 
                 setPosition({ x: newX, y: newY });
@@ -140,7 +133,7 @@ function Window(props) {
                 let constrainedX = (resizeDirection === "left" || resizeDirection === "top-left" || resizeDirection === "bottom-left") ?
                     Math.min(newX, window.innerWidth - 50) // minimum x position is window width - 50
                     : (resizeDirection === "right" || resizeDirection === "top-right" || resizeDirection === "bottom-right") ?
-                        Math.max(newX, 50 - newWidth) // maximum x position is 50 - new width so 50 pixels of the window are always visible
+                        Math.max(newX, 120 - newWidth) // maximum x position is 120 - new width so 120 pixels of the window are always visible
                         : newX; // for top and bottom resize, x position remains the same
 
                 const constrainedY = (resizeDirection === "top" || resizeDirection === "top-left" || resizeDirection === "top-right") ?
@@ -194,6 +187,21 @@ function Window(props) {
         };
     }, [isDragging, isResizing, initialMouseOffset, initialPosition, initialSize, resizeDirection]);
 
+    useEffect(() => {
+        const handleWindowResize = () => {
+            if (isFullScreen) {
+                setSize({ width: window.innerWidth, height: window.innerHeight });
+                setPosition({ x: 0, y: 0 });
+            }
+        };
+
+        window.addEventListener('resize', handleWindowResize);
+
+        return () => {
+            window.removeEventListener('resize', handleWindowResize);
+        };
+    }, [isFullScreen]);
+
     function focusWindow() {
         const index = props.order.indexOf(props.id);
         if (index !== -1) { // check if the index is valid
@@ -203,47 +211,58 @@ function Window(props) {
         }
     }
 
-    function closeWindow() {
+    function focusWindowClosing() {
+        setCanClose(true); // ensure onMouseUp only triggers closeWindow after close button's onMouseDown (prevent accidental closing on drag from fullscreen)
         focusWindow();
-        let arr = [...props.order];
-        arr.splice(-1, 1);
-        props.setOrder(arr);
-        props.setWindows(props.windows.filter(window => window.id !== props.id));
+    }
+
+    function closeWindow() {
+        if (canClose) {
+            let arr = [...props.order];
+            arr.splice(-1, 1); // remove the last element (window being closed should be focused, so it's at the end of the array)
+            props.setOrder(arr);
+            props.setWindows(props.windows.filter(window => window.id !== props.id)); // remove the window from the windows array
+            setCanClose(false);
+        }
     }
 
     function fullScreen() {
         focusWindow();
         if (isFullScreen) {
             setSize(prevSize);
-            setPosition(prevPosition);
+            setPosition(prevPosition); // restore the previous size and position
         } else {
             setPrevSize(size);
-            setPrevPosition(position);
-            setSize({ width: window.innerWidth, height: window.innerHeight - 46 });
-            setPosition({ x: 0, y: 0 });
+            setPrevPosition(position); //store the size and position before going fullscreen
+            setSize({ width: window.innerWidth, height: window.innerHeight - 46 }); // set the size to the window's inner dimensions (minus the footer height)
+            setPosition({ x: 0, y: 0 }); // set the position to the top left corner
         }
         setFullScreen(!isFullScreen);
+    }
+
+    function minimise() {
+
     }
 
     // function to handle the mousedown event on the window
     const handleMouseDown = (event) => {
         focusWindow();
         setFullScreen(false);
-        setSize(prevSize);
         setIsDragging(true);
         setInitialMouseOffset({ x: event.clientX, y: event.clientY });
         if (isFullScreen) {
-            const mouseX = event.clientX / window.innerWidth;
-            const sizeDiff = window.innerWidth - prevSize.width;
+            setSize(prevSize); // restore the previous size before going full screen
+            const mouseX = event.clientX / window.innerWidth; // calculate the mouse position as a percentage of the window width
+            const sizeDiff = window.innerWidth - prevSize.width; // calculate the difference between the fullscreen width and the new width
             const pos = {
-                x: mouseX * sizeDiff,
-                y: position.y
+                x: mouseX * sizeDiff, // offset the x position depending on the mouse position (if closer to the right, the window should be more to the right etc.)
+                y: position.y // keep the y position the same
             }
             setPosition(pos);
-            setInitialPosition(pos);
+            setInitialPosition(pos); // set that as both the initial and current position
         }
         else {
-            setInitialPosition({ x: position.x, y: position.y });
+            setInitialPosition({ x: position.x, y: position.y }); // normal dragging, set the initial position to the current position
         }
     };
 
@@ -279,7 +298,10 @@ function Window(props) {
                     <h1 className="font-medium ml-2">File Manager</h1>
                 </div>
                 <div className="h-full shrink-0">
-                    <button className="w-8 border-l-2 border-coal-400 h-full">
+                    <button
+                        className="w-8 border-l-2 border-coal-400 h-full"
+                        onClick={() => minimise()}
+                    >
                         -
                     </button>
                     <button
@@ -290,7 +312,8 @@ function Window(props) {
                     </button>
                     <button
                         className="w-8 border-l-2 border-coal-400 h-full"
-                        onClick={() => closeWindow()}
+                        onMouseDown={() => focusWindowClosing()}
+                        onMouseUp={() => closeWindow()}
                     >
                         X
                     </button>
@@ -300,8 +323,9 @@ function Window(props) {
                 <p className="p-2">Window number {props.id}</p>
             </div>
 
-            {/* Resize handles */}
+            {/* Disable resizing if in fullscreen mode */}
             {!isFullScreen && <>
+                {/* Resize handles */}
                 <div
                     className="absolute -left-1 top-0 h-full w-1 cursor-ew-resize"
                     onMouseDown={(e) => handleResizeMouseDown(e, "left")}
@@ -319,6 +343,7 @@ function Window(props) {
                     onMouseDown={(e) => handleResizeMouseDown(e, "bottom")}
                 />
 
+                {/* Corner handles */}
                 <div
                     className="absolute -left-1 -top-1 w-2 h-2 cursor-nwse-resize"
                     onMouseDown={(e) => handleResizeMouseDown(e, "top-left")}
