@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 
-function Window(props) {
+function Window({ id, defaultPos, order, setOrder, windows, setWindows}) {
     // variables for window dragging
     const [isDragging, setIsDragging] = useState(false); // state to determine if the window is being dragged
-    const [position, setPosition] = useState(props.defaultPos); // state to store the current position of the window
+    const [position, setPosition] = useState(defaultPos); // state to store the current position of the window
     const [initialPosition, setInitialPosition] = useState({ x: 0, y: 0 }); // state to store the position of the window when dragging started
 
     // variables for window resizing
@@ -203,11 +203,11 @@ function Window(props) {
     }, [isFullScreen]);
 
     function focusWindow() {
-        const index = props.order.indexOf(props.id);
+        const index = order.indexOf(id);
         if (index !== -1) { // check if the index is valid
-            let arr = [...props.order]; // copy the array
+            let arr = [...order]; // copy the array
             arr.push(arr.splice(index, 1)[0]); // remove the element at the found index and append it to the end
-            props.setOrder(arr); // update the state
+            setOrder(arr); // update the state
         }
     }
 
@@ -218,10 +218,10 @@ function Window(props) {
 
     function closeWindow() {
         if (canClose) {
-            let arr = [...props.order];
+            let arr = [...order];
             arr.splice(-1, 1); // remove the last element (window being closed should be focused, so it's at the end of the array)
-            props.setOrder(arr);
-            props.setWindows(props.windows.filter(window => window.id !== props.id)); // remove the window from the windows array
+            setOrder(arr);
+            setWindows(windows.filter(window => window.id !== id)); // remove the window from the windows array
             setCanClose(false);
         }
     }
@@ -241,7 +241,15 @@ function Window(props) {
     }
 
     function minimise() {
-
+        let arr = [...order];
+        const idx = arr.findIndex(el => el == id);
+        arr.splice(idx, 1);
+        arr.unshift(id);
+        setOrder(arr);
+        setPrevPosition(position);
+        setPrevSize(size);
+        setPosition({ x: window.innerWidth / 2, y: window.innerHeight + 200 });
+        setSize({ width: 300, height: 200 });
     }
 
     // function to handle the mousedown event on the window
@@ -279,16 +287,15 @@ function Window(props) {
 
     return (
         <div
-            className={isDragging || isResizing ? "bg-beige-300 absolute border-2 border-coal-400 no-select"
-                : "bg-beige-300 absolute border-2 border-coal-400 no-select transition-all duration-300 ease-in-out"}
+            className={isDragging || isResizing ? "bg-beige-300 absolute border-2 border-coal-400 no-select flex flex-col"
+                : "bg-beige-300 absolute border-2 border-coal-400 no-select flex flex-col transition-all duration-300 ease-in-out"}
             style={{
                 left: `${position.x}px`,
                 top: `${position.y}px`,
                 width: `${size.width}px`,
                 height: `${size.height}px`,
-                zIndex: props.order.indexOf(props.id) + 1
+                zIndex: order.indexOf(id) + 1
             }}
-            onClick={() => focusWindow()}
         >
             <div className="h-8 bg-beige-400 flex items-center border-b border-coal-400">
                 <div
@@ -319,8 +326,11 @@ function Window(props) {
                     </button>
                 </div>
             </div>
-            <div>
-                <p className="p-2">Window number {props.id}</p>
+            <div
+                className="flex-1"
+                onClick={() => focusWindow()}
+            >
+                <p className="p-2">Window number {id}</p>
             </div>
 
             {/* Disable resizing if in fullscreen mode */}

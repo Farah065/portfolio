@@ -3,7 +3,7 @@
 import Image from 'next/image';
 
 function FooterIcons(props) {
-    function focusWindow(id) {
+    function maximise(id) {
         const index = props.order.indexOf(id);
         if (index !== -1) { // check if the index is valid
             let arr = [...props.order]; // copy the array
@@ -32,7 +32,7 @@ function FooterIcons(props) {
                         className={props.order[props.order.length - 1] === window.id ?
                             "flex items-center gap-2 bg-beige-500 h-full px-2 border-r-[3px] border-b-[3px] border-beige-600"
                             : "flex items-center gap-2 h-full px-2 border-r-[3px] border-b-[3px] border-beige-400"} // add a border to the focused window's footer icon
-                        onClick={() => focusWindow(window.id)}
+                        onClick={() => maximise(window.id)}
                     >
                         <Image
                             priority

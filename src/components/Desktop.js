@@ -6,10 +6,13 @@ import Window from "./Window";
 import Footer from "./Footer";
 
 function Desktop() {
-    const [windows, setWindows] = useState([]);
-    const [order, setOrder] = useState([]);
+    const [windows, setWindows] = useState([]); // array of opened windows in the same order they were opened
+    // each window is an object with an id and a title
+    const [order, setOrder] = useState([-1]); // array of opened windows with changing order depending on the focused window
+    // the last element is the focused window, second to last is behind it, and so on
+    // -1 is used to indicate that no window is focused
 
-    const [defaultPos, setDefaultPos] = useState({ x: 0, y: 0 });
+    const [defaultPos, setDefaultPos] = useState({ x: 0, y: 0 }); // default position of the windows when they open
 
     useEffect(() => {
         // calculate the default position of the windows
@@ -46,15 +49,20 @@ function Desktop() {
                     windows={windows} setWindows={setWindows}
                     order={order} setOrder={setOrder} />
             </div>
-            {windows.some(window => window.id === 1) && <Window id={1} defaultPos={defaultPos}
-                order={order} setOrder={setOrder}
-                windows={windows} setWindows={setWindows} />}
-            {windows.some(window => window.id === 2) && <Window id={2} defaultPos={defaultPos}
-                order={order} setOrder={setOrder}
-                windows={windows} setWindows={setWindows} />}
-            {windows.some(window => window.id === 3) && <Window id={3} defaultPos={defaultPos}
-                order={order} setOrder={setOrder}
-                windows={windows} setWindows={setWindows} />}
+            
+            {windows.some(window => window.id === 1) &&
+                <Window id={1} defaultPos={defaultPos}
+                    order={order} setOrder={setOrder}
+                    windows={windows} setWindows={setWindows} />}
+            {windows.some(window => window.id === 2) &&
+                <Window id={2} defaultPos={defaultPos}
+                    order={order} setOrder={setOrder}
+                    windows={windows} setWindows={setWindows} />}
+            {windows.some(window => window.id === 3) &&
+                <Window id={3} defaultPos={defaultPos}
+                    order={order} setOrder={setOrder}
+                    windows={windows} setWindows={setWindows} />}
+
             <Footer windows={windows} order={order} setOrder={setOrder} />
         </div>
     );
