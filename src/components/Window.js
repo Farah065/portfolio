@@ -5,28 +5,18 @@ import React, { useState, useEffect } from 'react';
 function Window({ id, defaultSize, order, setOrder, windows, setWindows, minimise }) {
     // variables for window dragging
     const [isDragging, setIsDragging] = useState(false); // state to determine if the window is being dragged
-    // const [position, setPosition] = useState(defaultPos); // state to store the current position of the window
     const [initialPosition, setInitialPosition] = useState({ x: 0, y: 0 }); // state to store the position of the window when dragging started
 
     // variables for window resizing
-    // const defaultSize = {
-    //     width: 700,
-    //     height: 500
-    // };
     const minSize = {
         width: 200,
         height: 150
     };
     const [isResizing, setIsResizing] = useState(false); // state to determine if the window is being resized
-    // const [size, setSize] = useState(defaultSize); // state to store the current size of the window
     const [initialSize, setInitialSize] = useState(defaultSize); // state to store the size of the window when resizing started
     const [resizeDirection, setResizeDirection] = useState(''); // state to store the direction of the resize
 
     const [initialMouseOffset, setInitialMouseOffset] = useState({ x: 0, y: 0 }); // state to store the initial mouse position when dragging or resizing started
-
-    const [isFullScreen, setFullScreen] = useState(false); // state to determine if the window is in full screen mode
-    // const [prevSize, setPrevSize] = useState(defaultSize); // state to store the previous size of the window before full screen
-    // const [prevPosition, setPrevPosition] = useState(defaultPos); // state to store the previous position of the window before full screen
 
     const [canClose, setCanClose] = useState(false); // state to determine if the window can be closed
 
@@ -80,6 +70,19 @@ function Window({ id, defaultSize, order, setOrder, windows, setWindows, minimis
     }
     function getPrevSize() {
         return windows.find(window => window.id === id).prevSize;
+    }
+
+    function updateFullScreen(value) {
+        setWindows(prevWindows =>
+            prevWindows.map(window =>
+                window.id === id
+                    ? { ...window, isFullScreen: value }
+                    : window
+            )
+        );
+    }
+    function getFullScreen() {
+        return windows.find(window => window.id === id).isFullScreen;
     }
 
     useEffect(() => {
@@ -243,9 +246,9 @@ function Window({ id, defaultSize, order, setOrder, windows, setWindows, minimis
 
     useEffect(() => {
         const handleWindowResize = () => {
-            if (isFullScreen) {
+            // only update the window size on browser window resize if it's in fullscreen mode and not minimised
+            if (getFullScreen() && windows.find(window => window.id === id).isMinimised === false) {
                 updateWindowSize({ width: window.innerWidth, height: window.innerHeight });
-                updateWindowPosition({ x: 0, y: 0 });
             }
         };
 
@@ -254,7 +257,7 @@ function Window({ id, defaultSize, order, setOrder, windows, setWindows, minimis
         return () => {
             window.removeEventListener('resize', handleWindowResize);
         };
-    }, [isFullScreen]);
+    }, [getFullScreen()]);
 
     function focusWindow() {
         const index = order.indexOf(id);
@@ -282,7 +285,7 @@ function Window({ id, defaultSize, order, setOrder, windows, setWindows, minimis
 
     function fullScreen() {
         focusWindow();
-        if (isFullScreen) {
+        if (getFullScreen()) {
             updateWindowSize(getPrevSize());
             updateWindowPosition(getPrevPosition()); // restore the previous size and position
         } else {
@@ -291,16 +294,17 @@ function Window({ id, defaultSize, order, setOrder, windows, setWindows, minimis
             updateWindowSize({ width: window.innerWidth, height: window.innerHeight - 46 }); // set the size to the window's inner dimensions (minus the footer height)
             updateWindowPosition({ x: 0, y: 0 }); // set the position to the top left corner
         }
-        setFullScreen(!isFullScreen);
+        updateFullScreen(!getFullScreen());
+        console.log(windows.find(window => window.id === id));
     }
 
     // function to handle the mousedown event on the window
     const handleMouseDown = (event) => {
         focusWindow();
-        setFullScreen(false);
+        updateFullScreen(false);
         setIsDragging(true);
         setInitialMouseOffset({ x: event.clientX, y: event.clientY });
-        if (isFullScreen) {
+        if (getFullScreen()) {
             updateWindowSize(getPrevSize()); // restore the previous size before going full screen
             const mouseX = event.clientX / window.innerWidth; // calculate the mouse position as a percentage of the window width
             const sizeDiff = window.innerWidth - getPrevSize().width; // calculate the difference between the fullscreen width and the new width
@@ -314,6 +318,7 @@ function Window({ id, defaultSize, order, setOrder, windows, setWindows, minimis
         else {
             setInitialPosition(getWindowPosition()); // normal dragging, set the initial position to the current position
         }
+        console.log(windows.find(window => window.id === id));
     };
 
     // function to handle the mousedown event on the resize handles
@@ -349,7 +354,8 @@ function Window({ id, defaultSize, order, setOrder, windows, setWindows, minimis
                 <div className="h-full shrink-0">
                     <button
                         className="w-8 border-l-2 border-coal-400 h-full"
-                        onClick={() => minimise(id)}
+                        onMouseDown={() => focusWindowClosing()}
+                        onMouseUp={() => minimise(id)}
                     >
                         -
                     </button>
@@ -376,7 +382,7 @@ function Window({ id, defaultSize, order, setOrder, windows, setWindows, minimis
             </div>
 
             {/* Disable resizing if in fullscreen mode */}
-            {!isFullScreen && <>
+            {!getFullScreen() && <>
                 {/* Resize handles */}
                 <div
                     className="absolute -left-1 top-0 h-full w-1 cursor-ew-resize"

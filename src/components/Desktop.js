@@ -44,9 +44,10 @@ function Desktop() {
         let arr = [...order];
         const idx = arr.findIndex(el => el == id);
         arr.splice(idx, 1);
-        arr.unshift(id);
+        arr.unshift(id); // move window to the beginning of the array to unfocus it
         setOrder(arr);
 
+        // save the current position and size of the window before minimising it
         const pos = windows.find(window => window.id === id).position;
         const size = windows.find(window => window.id === id).size;
         setWindows(prevWindows =>
@@ -55,10 +56,10 @@ function Desktop() {
                     {
                         ...win,
                         size: { width: 300, height: 200 },
-                        position: { x: window.innerWidth / 2, y: window.innerHeight + 200 },
-                        prevSize: size,
-                        prevPos: pos,
-                        minimised: true
+                        position: { x: window.innerWidth / 2, y: window.innerHeight + 200},
+                        prevSize: win.isFullScreen ? win.prevSize : size,
+                        prevPos: win.isFullScreen ? win.prevPos : pos, // if the window is fullscreen, don't save the position and size (so as to not mess up un-fullscreening it)
+                        isMinimised: true
                     }
                     : win
             )
@@ -66,32 +67,41 @@ function Desktop() {
     }
 
     function maximise(id) {
+        // focus the window
         const index = order.indexOf(id);
-        if (index !== -1) { // check if the index is valid
-            let arr = [...order]; // copy the array
+        if (index !== -1) {
+            let arr = [...order];
             arr.push(arr.splice(index, 1)[0]); // remove the element at the found index and append it to the end
-            setOrder(arr); // update the state
+            setOrder(arr);
         }
 
-        if(windows.find(window => window.id === id).minimised) {
-            const prevPos = windows.find(window => window.id === id).prevPos;
-            const prevSize = windows.find(window => window.id === id).prevSize;
+        if(windows.find(window => window.id === id).isMinimised) { // if the window is minimised, maximise it
+            let prevPos;
+            let prevSize;
+            if(windows.find(window => window.id === id).isFullScreen) { // if the window is fullscreen, set to fullscreen size and position
+                prevPos = { x: 0, y: 0 };
+                prevSize = { width: window.innerWidth, height: window.innerHeight - 46 };
+            }
+            else { // otherwise, set to the saved size and position
+                prevPos = windows.find(window => window.id === id).prevPos;
+                prevSize = windows.find(window => window.id === id).prevSize;
+            }
     
             setWindows(prevWindows =>
                 prevWindows.map(window =>
                     window.id === id
-                        ? { ...window, size: prevSize, position: prevPos, minimised: false }
+                        ? { ...window, size: prevSize, position: prevPos, isMinimised: false }
                         : window
                 )
             );
         }
-        else if(order[order.length - 1] === id) {
+        else if(order[order.length - 1] === id) { // if the window is maximised, minimise it
             minimise(id);
         }
     }
 
     return (
-        <div>
+        <>
             <div className="p-4 flex flex-col gap-4">
                 <Icon src="/images/folder.svg" alt="folder icon" title="projects 1" id={1}
                     windows={windows} setWindows={setWindows}
@@ -126,8 +136,10 @@ function Desktop() {
                     windows={windows} setWindows={setWindows}
                     minimise={minimise} />}
 
-            <Footer windows={windows} setWindows={setWindows} order={order} setOrder={setOrder} minimise={minimise} maximise={maximise} />
-        </div>
+            <Footer windows={windows} setWindows={setWindows}
+                order={order} setOrder={setOrder}
+                minimise={minimise} maximise={maximise} />
+        </>
     );
 }
 

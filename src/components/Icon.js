@@ -6,11 +6,12 @@ function Icon(props) {
             props.setWindows([...props.windows, {
                 id: props.id,
                 title: props.title,
-                size: props.defaultSize,
-                position: props.defaultPos,
-                prevSize: props.defaultSize,
-                prevPos: props.defaultPos,
-                minimised: false
+                size: props.defaultSize, // the current size of the window
+                position: props.defaultPos, // the current position of the window
+                prevSize: props.defaultSize, // the previous size of the window before fullscreen/minimise
+                prevPos: props.defaultPos, // the previous position of the window before fullscreen/minimise
+                isMinimised: false,
+                isFullScreen: false
             }]);
             props.setOrder([...props.order, props.id]);
         }
@@ -25,10 +26,11 @@ function Icon(props) {
     }
 
     function handleDoubleClick() {
-        if(props.windows.some(window => window.id === props.id)) {
+        // if the window is already open and minimised, maximise it
+        if(props.windows.some(window => window.id === props.id) && props.windows.find(window => window.id === props.id).isMinimised === true) {
             props.maximise(props.id);
         }
-        else {
+        else { // if the window is not open or is minimised, open or focus it
             openWindow();
         }
     }
