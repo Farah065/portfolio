@@ -27,12 +27,12 @@ function FooterIcons({ windows, order, maximise }) {
                     >
                         <Image
                             priority
-                            src={"/images/folder.svg"}
+                            src={window.type === "folder" ? "/images/folder.svg" : "/images/text.svg"}
                             height="28"
                             width="28"
-                            alt={"folder icon"}
+                            alt={window.type === "folder" ? "folder icon" : "pdf icon"}
                         />
-                        <p className="font-medium text-sm">{window.title}</p>
+                        <p className="font-medium text-sm">{window.title.replace('.pdf','')}</p>
                     </button>
                 </div>
             ))}

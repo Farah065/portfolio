@@ -6,6 +6,7 @@ function Icon(props) {
             props.setWindows([...props.windows, {
                 id: props.id,
                 title: props.title,
+                type: props.type,
                 size: props.defaultSize, // the current size of the window
                 position: props.defaultPos, // the current position of the window
                 prevSize: props.defaultSize, // the previous size of the window before fullscreen/minimise
@@ -36,15 +37,20 @@ function Icon(props) {
     }
 
     return (
-        <button className="flex flex-col items-center w-max" onDoubleClick={handleDoubleClick}>
+        <button
+            className="flex flex-col items-center w-max gap-1"
+            onDoubleClick={handleDoubleClick}
+        >
             <Image
                 priority
                 src={props.src}
-                height="44"
-                width="44"
+                height="48"
+                width="48"
                 alt={props.alt}
             />
-            <h6 className="font-medium text-xs text-wrap break-words max-w-18">{props.title}</h6>
+            <h6 className="font-medium text-xs text-wrap break-words whitespace-pre-wrap tracking-tight w-16">
+                {props.title}
+            </h6>
         </button>
     );
 }

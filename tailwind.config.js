@@ -19,7 +19,8 @@ module.exports = {
           200: "#555555",
           300: "#333333",
           400: "#111111",
-        }
+        },
+        close: "#EDC2C2"
       },
       fontFamily: {
         plexMono: ['IBM Plex Mono', 'monospace'],

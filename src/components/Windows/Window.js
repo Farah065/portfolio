@@ -1,16 +1,18 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Folder from './Folder';
+import PDF from './PDF';
 
-function Window({ id, defaultSize, order, setOrder, windows, setWindows, minimise }) {
+function Window({ id, defaultSize, defaultPos, order, setOrder, windows, setWindows, minimise, maximise }) {
     // variables for window dragging
     const [isDragging, setIsDragging] = useState(false); // state to determine if the window is being dragged
     const [initialPosition, setInitialPosition] = useState({ x: 0, y: 0 }); // state to store the position of the window when dragging started
 
     // variables for window resizing
     const minSize = {
-        width: 200,
-        height: 150
+        width: 400,
+        height: 300
     };
     const [isResizing, setIsResizing] = useState(false); // state to determine if the window is being resized
     const [initialSize, setInitialSize] = useState(defaultSize); // state to store the size of the window when resizing started
@@ -318,7 +320,6 @@ function Window({ id, defaultSize, order, setOrder, windows, setWindows, minimis
         else {
             setInitialPosition(getWindowPosition()); // normal dragging, set the initial position to the current position
         }
-        console.log(windows.find(window => window.id === id));
     };
 
     // function to handle the mousedown event on the resize handles
@@ -344,29 +345,29 @@ function Window({ id, defaultSize, order, setOrder, windows, setWindows, minimis
                 zIndex: order.indexOf(id) + 1
             }}
         >
-            <div className="h-8 bg-beige-400 flex items-center border-b border-coal-400">
+            <div className="h-8 bg-beige-400 flex items-center border-b border-coal-400 pl-2">
                 <div
                     className="h-full w-full flex items-center"
                     onMouseDown={handleMouseDown}
                 >
-                    <h1 className="font-medium ml-2">File Manager</h1>
+                    <h1 className="font-medium">{windows.find(window => window.id === id).type === "folder" ? "File Explorer" : windows.find(window => window.id === id).title}</h1>
                 </div>
                 <div className="h-full shrink-0">
                     <button
-                        className="w-8 border-l-2 border-coal-400 h-full"
+                        className="w-8 border-l border-coal-400 h-full"
                         onMouseDown={() => focusWindowClosing()}
                         onMouseUp={() => minimise(id)}
                     >
                         -
                     </button>
                     <button
-                        className="w-8 border-l-2 border-coal-400 h-full"
+                        className="w-8 border-l border-coal-400 h-full"
                         onClick={() => fullScreen()}
                     >
                         ◻
                     </button>
                     <button
-                        className="w-8 border-l-2 border-coal-400 h-full"
+                        className="w-8 border-l border-coal-400 h-full bg-close"
                         onMouseDown={() => focusWindowClosing()}
                         onMouseUp={() => closeWindow()}
                     >
@@ -374,11 +375,26 @@ function Window({ id, defaultSize, order, setOrder, windows, setWindows, minimis
                     </button>
                 </div>
             </div>
+            
+            {/* Window content */}
             <div
-                className="flex-1"
+                className="h-full overflow-y-auto custom-scrollbar"
                 onClick={() => focusWindow()}
             >
-                <p className="p-2">Window number {id}</p>
+                {windows.find(window => window.id === id).type === "folder" &&
+                    <Folder id={id}
+                        windows={windows} setWindows={setWindows}
+                        order={order} setOrder={setOrder}
+                        defaultPos={defaultPos} defaultSize={defaultSize}
+                        maximise={maximise} focusWindow={focusWindow} />
+                }
+                {windows.find(window => window.id === id).type === "pdf" &&
+                    <PDF id={id}
+                        windows={windows} setWindows={setWindows}
+                        order={order} setOrder={setOrder}
+                        defaultPos={defaultPos} defaultSize={defaultSize}
+                        maximise={maximise} focusWindow={focusWindow} />
+                }
             </div>
 
             {/* Disable resizing if in fullscreen mode */}
