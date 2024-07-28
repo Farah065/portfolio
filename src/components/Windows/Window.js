@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import Folder from './Folder';
 import PDF from './PDF';
+import PdfContent from './PdfContent';
 
-function Window({ id, defaultSize, defaultPos, order, setOrder, windows, setWindows, minimise, maximise }) {
+function Window({ id, defaultSize, defaultPos, order, setOrder, windows, setWindows, minimise, maximise, children }) {
     // variables for window dragging
     const [isDragging, setIsDragging] = useState(false); // state to determine if the window is being dragged
     const [initialPosition, setInitialPosition] = useState({ x: 0, y: 0 }); // state to store the position of the window when dragging started
@@ -347,10 +348,13 @@ function Window({ id, defaultSize, defaultPos, order, setOrder, windows, setWind
         >
             <div className="h-8 bg-beige-400 flex items-center border-b border-coal-400 pl-2">
                 <div
-                    className="h-full w-full flex items-center"
+                    className="h-8 w-full flex items-center"
                     onMouseDown={handleMouseDown}
                 >
-                    <h1 className="font-medium">{windows.find(window => window.id === id).type === "folder" ? "File Explorer" : windows.find(window => window.id === id).title}</h1>
+                    <h1 className="font-medium">
+                        {windows.find(window => window.id === id).type === "folder" ? "File Explorer"
+                            : windows.find(window => window.id === id).title}
+                    </h1>
                 </div>
                 <div className="h-full shrink-0">
                     <button
@@ -377,25 +381,34 @@ function Window({ id, defaultSize, defaultPos, order, setOrder, windows, setWind
             </div>
             
             {/* Window content */}
-            <div
+            {/* <div
                 className="h-full overflow-y-auto custom-scrollbar"
                 onClick={() => focusWindow()}
-            >
+            > */}
                 {windows.find(window => window.id === id).type === "folder" &&
-                    <Folder id={id}
-                        windows={windows} setWindows={setWindows}
-                        order={order} setOrder={setOrder}
-                        defaultPos={defaultPos} defaultSize={defaultSize}
-                        maximise={maximise} focusWindow={focusWindow} />
+                    <div
+                        className="h-full overflow-y-auto custom-scrollbar"
+                        onClick={() => focusWindow()}
+                    >
+                        <Folder id={id}
+                            windows={windows} setWindows={setWindows}
+                            order={order} setOrder={setOrder}
+                            defaultPos={defaultPos} defaultSize={defaultSize}
+                            maximise={maximise} focusWindow={focusWindow} />
+                    </div>
                 }
                 {windows.find(window => window.id === id).type === "pdf" &&
-                    <PDF id={id}
-                        windows={windows} setWindows={setWindows}
-                        order={order} setOrder={setOrder}
-                        defaultPos={defaultPos} defaultSize={defaultSize}
-                        maximise={maximise} focusWindow={focusWindow} />
+                    <div className="h-full relative">
+                        <PDF id={id}
+                            windows={windows} setWindows={setWindows}
+                            order={order} setOrder={setOrder}
+                            defaultPos={defaultPos} defaultSize={defaultSize}
+                            maximise={maximise} focusWindow={focusWindow}>
+                                {children}
+                        </PDF>
+                    </div>
                 }
-            </div>
+            {/* </div> */}
 
             {/* Disable resizing if in fullscreen mode */}
             {!getFullScreen() && <>

@@ -5,7 +5,7 @@ import Icon from "./Icon";
 import Window from "./Windows/Window";
 import Footer from "./Footer";
 
-function Desktop() {
+function Desktop({ children }) {
     const [windows, setWindows] = useState([]); // array of opened windows in the same order they were opened
     // each window is an object with an id and a title
     const [order, setOrder] = useState([-1]); // array of opened windows with changing order depending on the focused window
@@ -18,6 +18,7 @@ function Desktop() {
         height: 500
     };
 
+    // array of objects containing information about all the windows that can be opened
     const windowInfo = [
         {
             id: 1,
@@ -145,12 +146,16 @@ function Desktop() {
         }
     }
 
+    // generate a window component with the given id
     const generateWindow = (id) => <Window id={id}
         order={order} setOrder={setOrder}
         windows={windows} setWindows={setWindows}
         minimise={minimise} maximise={maximise}
-        defaultSize={defaultSize} defaultPos={defaultPos} />
+        defaultSize={defaultSize} defaultPos={defaultPos}>
+        {children}
+    </Window>
 
+    // generate an icon component for each window
     const generateIcons = windowInfo.map((win) =>
         <Icon src={win.src} alt={win.alt} title={win.title} type={win.type} id={win.id} key={win.id}
             windows={windows} setWindows={setWindows}
@@ -195,8 +200,6 @@ function Desktop() {
             {windows.some(window => window.id === 17) && generateWindow(17)} {/* CA */}
             {windows.some(window => window.id === 18) && generateWindow(18)} {/* OS */}
             {windows.some(window => window.id === 19) && generateWindow(19)} {/* prolog scheduler */}
-
-            {/* other projects */}
 
             <Footer windows={windows} setWindows={setWindows}
                 order={order} setOrder={setOrder}

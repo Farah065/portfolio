@@ -3,16 +3,21 @@ import Image from 'next/image';
 function Icon(props) {
     function openWindow() {
         if (!props.windows.some(window => window.id === props.id)) { // if some window with the same id doesn't exist
+            // pdf files open in full screen by default
+            const windowSize = props.type === "folder" ? props.defaultSize : { width: window.innerWidth, height: window.innerHeight - 46 };
+            const windowPos = props.type === "folder" ? props.defaultPos : { x: 0, y: 0 };
+            const fullScreen = props.type === "folder" ? false : true;
+
             props.setWindows([...props.windows, {
                 id: props.id,
                 title: props.title,
                 type: props.type,
-                size: props.defaultSize, // the current size of the window
-                position: props.defaultPos, // the current position of the window
+                size: windowSize, // the current size of the window
+                position: windowPos, // the current position of the window
                 prevSize: props.defaultSize, // the previous size of the window before fullscreen/minimise
-                prevPos: props.defaultPos, // the previous position of the window before fullscreen/minimise
+                prevPos: windowPos, // the previous position of the window before fullscreen/minimise
                 isMinimised: false,
-                isFullScreen: false
+                isFullScreen: fullScreen
             }]);
             props.setOrder([...props.order, props.id]);
         }

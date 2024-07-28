@@ -1,6 +1,6 @@
 import Icon from "../Icon";
 
-function Folder({ id, windows, setWindows, order, setOrder, defaultPos, defaultSize, maximise, focusWindow }) {
+function Folder({ id, windows, setWindows, order, setOrder, defaultPos, defaultSize, maximise }) {
     const generateIcon = (title, id) => <Icon
         src="/images/text.svg" alt="pdf icon" title={title} type="pdf" id={id}
         windows={windows} setWindows={setWindows}
