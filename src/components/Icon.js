@@ -17,7 +17,8 @@ function Icon(props) {
                 prevSize: props.defaultSize, // the previous size of the window before fullscreen/minimise
                 prevPos: windowPos, // the previous position of the window before fullscreen/minimise
                 isMinimised: false,
-                isFullScreen: fullScreen
+                isFullScreen: fullScreen,
+                zoom: 1
             }]);
             props.setOrder([...props.order, props.id]);
         }
