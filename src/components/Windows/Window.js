@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Folder from './Folder';
 import PDF from './PDF';
-import PdfContent from './PdfContent';
 
 function Window({ id, defaultSize, defaultPos, order, setOrder, windows, setWindows, minimise, maximise, children }) {
     // variables for window dragging
@@ -398,7 +397,10 @@ function Window({ id, defaultSize, defaultPos, order, setOrder, windows, setWind
                     </div>
                 }
                 {windows.find(window => window.id === id).type === "pdf" &&
-                    <div className="h-full relative">
+                    <div
+                        className="h-full relative"
+                        onClick={() => focusWindow()}
+                    >
                         <PDF id={id}
                             windows={windows} setWindows={setWindows}
                             order={order} setOrder={setOrder}

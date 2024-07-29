@@ -14,7 +14,7 @@ function Desktop({ children }) {
 
     const [defaultPos, setDefaultPos] = useState({ x: 0, y: 0 }); // default position of the windows when they open
     const defaultSize = { // default size of the windows when they open
-        width: 700,
+        width: 780,
         height: 500
     };
 
